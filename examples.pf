@@ -1,0 +1,30 @@
+MODEL base_model FROM "CorticalStack/pastiche-crown-clown-7b-dare"
+
+//Instructions for TS and EG can be constant
+LET ts_instructions = ""
+LET ts_examples = []
+LET pg_instructions = ""
+LET pg_examples = []
+LET pg_instructions = ""
+LET pg_examples = []
+
+FUNCTION init_task_separator()
+	 RETURN MODEL task_separator FROM "CorticalStack/pastiche-crown-clown-7b-dare" WITH INSTRUCTIONS ts_instructions EXAMPLES ts_examples
+
+FUNCTION init_example_pipeline()
+	 MODEL prompt_generator FROM "CorticalStack/pastiche-crown-clown-7b-dare" WITH INSTRUCTIONS eg_instructions EXAMPLES eg_examples
+	 MODEL response_generator FROM base_model.hf_id WITH INSTRUCTIONS rg_instructions EXAMPLES rg_examples
+	 RETURN PIPELINE example_pipeline is prompt_generator -> response_generator
+	 
+
+FUNCTION finetune(base_model, instructions)
+	 LET task_separator = init_task_separator()
+	 LET example_pipeline = init_example_pipeline()
+	 PIPELINE teaching_pipeline IS task_separator -> example_pipeline
+	 GENERATOR example_generator(num_examples, instructions)
+	 	   i = 0
+	 	   WHILE i < num_examples
+		   	YIELD teaching_pipeline(instructions)
+			i++
+	 INSTRUCTIONS FOR base_model ARE instructions
+	 FINETUNE base_model USING SFT, PEFT WITH example_generator

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Assistant Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Custom Assistant Dashboard</h1>
+    </header>
+    <main>
+        <section id="inputSection">
+            <h2>Input Instructions</h2>
+            <textarea id="instructionsInput" placeholder="Type your instructions here..."></textarea>
+            <button onclick="generateExamples()">Generate Examples</button>
+        </section>
+        <section id="examplesSection">
+            <h2>Generated Examples</h2>
+            <div id="examplesContainer"></div>
+            <button onclick="submitSelection()">Submit Selection</button>
+        </section>
+        <section id="feedbackSection">
+            <h2>Provide Feedback</h2>
+            <textarea id="feedbackInput" placeholder="Type your feedback here..."></textarea>
+            <button onclick="submitFeedback()">Submit Feedback</button>
+        </section>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>
