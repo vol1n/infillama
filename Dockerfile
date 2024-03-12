@@ -1,0 +1,33 @@
+# Use an official Python runtime as a parent image
+FROM python:3.10-slim
+
+# Set the working directory in the container to /app
+WORKDIR /app
+
+
+
+RUN pip install torch --no-cache-dir --index-url https://download.pytorch.org/whl/cpu
+RUN pip install -i https://pypi.org/simple/ bitsandbytes
+# Install any needed packages specified in requirements.txt
+COPY requirements.txt /app
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the current directory contents into the container at /app
+COPY . /app
+
+# Make port 7860 available to the world outside this container
+EXPOSE 9000
+
+# Define environment variable
+#ENV TRANSFORMERS_CACHE="/app/.cache/huggingface/transformers"
+ENV HF_HOME=/app/.cache/huggingface
+ENV HUGGING_FACE_HUB_TOKEN="Your_HuggingFace_Token_Here"
+
+#RUN ls /app
+
+# Run app.py to cache mode
+RUN python app.py
+
+RUN ls /app/.cache/huggingface/transformers
+
+CMD ["uvicorn", "app:app", "--port", "9000", "--host", "0.0.0.0"]

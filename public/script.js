@@ -15,20 +15,21 @@ function displayExamples(examples) {
     examples.forEach((example, index) => {
         let div = document.createElement('div');
         div.className = 'example';
-        div.textContent = example.text; // Assuming each example has a 'text' property
-        div.onclick = function() { selectExample(example, index); };
+        div.textContent = example; // Adjust based on your example structure
+        div.onclick = function() { selectExample(div, index); };
         container.appendChild(div);
     });
 }
 
-async function selectExample(example, index) {
-    // Optionally highlight the selected example or disable other examples
-    console.log(`Example ${index + 1} selected:`, example);
-    // You could also update the UI to reflect the selection
+function selectExample(div, index) {
+    // Optional: Highlight the selected example
+    document.querySelectorAll('.example').forEach(el => el.classList.remove('selected'));
+    div.classList.add('selected');
+    console.log(`Example ${index} selected.`);
 }
 
 async function submitSelection() {
-    const selectedExampleText = document.querySelector('.example.selected').textContent; // Ensure you have a way to identify the selected example
+    const selectedExampleText = document.querySelector('.example.selected').textContent;
     try {
         const response = await fetch('http://your-backend-api/submit-selection', {
             method: 'PUT',
@@ -39,20 +40,5 @@ async function submitSelection() {
         console.log("Submission result:", result);
     } catch (error) {
         console.error("Failed to submit selection:", error);
-    }
-}
-
-async function submitFeedback() {
-    const feedback = document.getElementById('feedbackInput').value;
-    try {
-        const response = await fetch('http://your-backend-api/submit-feedback', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ feedback: feedback })
-        });
-        const result = await response.json();
-        console.log("Feedback result:", result);
-    } catch (error) {
-        console.error("Failed to submit feedback:", error);
     }
 }

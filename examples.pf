@@ -1,30 +1,41 @@
 MODEL base_model FROM "CorticalStack/pastiche-crown-clown-7b-dare"
 
 //Instructions for TS and EG can be constant
-LET ts_instructions = ""
+LET ts_instructions = "Separate the following instructions for an LLM into as many distinct tasks as is applicable. In other words if there are tasks A, B, and C all written in the instructions your output should be: A\nB\nC"
 LET ts_examples = []
-LET pg_instructions = ""
+LET pg_instructions = "Your job is to Generate prompts the user might reasonably request from a chatbot that is designed to do a specific task. You are not to act as the chatbot doing the given task, your only job is to create prompts a user could hypothetically ask this chatbot. Here is the hypothetical chatbot's task: "
 LET pg_examples = []
-LET pg_instructions = ""
-LET pg_examples = []
+LET rg_instructions = "Your job is to respond to the given prompt as if you are the chatbot that is defined by the given task. You will be given a task and a prompt."
+LET rg_examples = []
 
 FUNCTION init_task_separator()
-	 RETURN MODEL task_separator FROM "CorticalStack/pastiche-crown-clown-7b-dare" WITH INSTRUCTIONS ts_instructions EXAMPLES ts_examples
+#	 RETURN MODEL task_separator FROM "CorticalStack/pastiche-crown-clown-7b-dare" WITH INSTRUCTIONS ts_instructions EXAMPLES ts_examples
+	 RETURN FUNCTION "lambda x: x"
+
+FUNCTION combine_pairs(context)
+	 RETURN """
+	 context[0]
+	 <SPLIT>
+	 context[1]"""
 
 FUNCTION init_example_pipeline()
 	 MODEL prompt_generator FROM "CorticalStack/pastiche-crown-clown-7b-dare" WITH INSTRUCTIONS eg_instructions EXAMPLES eg_examples
 	 MODEL response_generator FROM base_model.hf_id WITH INSTRUCTIONS rg_instructions EXAMPLES rg_examples
-	 RETURN PIPELINE example_pipeline is prompt_generator -> response_generator
+	 RETURN PIPELINE example_pipeline is prompt_generator -> response_generator -> combine_pairs
+
+FUNCTION test_pg(instructions)
+	 MODEL prompt_generator FROM "CorticalStack/pastiche-crown-clown-7b-dare" WITH INSTRUCTIONS pg_instructions + instructions
+	 return prompt_generator(instructions)
 	 
 
 FUNCTION finetune(base_model, instructions)
 	 LET task_separator = init_task_separator()
-	 LET example_pipeline = init_example_pipeline()
-	 PIPELINE teaching_pipeline IS task_separator -> example_pipeline
+	 LET tasks = task_separator(instructions)
+	 LET example_pipeline = init_example_pipeline(tasks)
 	 GENERATOR example_generator(num_examples, instructions)
 	 	   i = 0
 	 	   WHILE i < num_examples
-		   	YIELD teaching_pipeline(instructions)
+		   	YIELD example_pipeline(instructions)
 			i++
 	 INSTRUCTIONS FOR base_model ARE instructions
 	 FINETUNE base_model USING SFT, PEFT WITH example_generator
