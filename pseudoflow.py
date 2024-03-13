@@ -2,13 +2,16 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipe
 from typing import Union
 
 class PseudoFlowModel:
-    def __init__(self, model_id, instructions=None, examples=None):
+    def __init__(self, model_id, instructions=None, examples=None, quant=""):
         self.model_id = model_id
         self.model = AutoModelForSequenceClassification.from_pretrained(model_id)
         self.tokenizer = AutoTokenizer.from_pretrained(model_id)
         self.instructions = instructions
         self.examples = examples
-        self.pipeline = pipeline(task="text-generation", model=self.model, tokenizer=self.tokenizer)
+        if quant == "4bit":
+            self.pipeline = pipeline(task="text-generation", model=self.model, tokenizer=self.tokenizer, load_in_4bit=True)
+        else:
+            self.pipeline = pipeline(task="text-generation", model=self.model, tokenizer=self.tokenizer)
 
     def set_instructions(self, instructions):
         self.instructions = instructions

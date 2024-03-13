@@ -44,7 +44,8 @@ print(bitsandbytes)
 prompt_generator = PseudoFlowModel(
         model_id=helper_model_id,
         instructions=pg_instructions,
-        examples=[]  # Assuming no examples are provided in this case
+        examples=[],  # Assuming no examples are provided in this case
+        quant="4bit"
     )
 print("there")
 def test_pg(instructions):
